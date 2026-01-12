@@ -1,0 +1,2 @@
+# RPG_Playground
+Here I will be working on different mechanics and AI behaviours for a game genre I like, RPG's, Using Unreal Engine in order to expand my knowledge
