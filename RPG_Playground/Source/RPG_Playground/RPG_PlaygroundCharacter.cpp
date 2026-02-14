@@ -46,8 +46,31 @@ ARPG_PlaygroundCharacter::ARPG_PlaygroundCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	//Player starts NOT Crouching
+	bCrouched = false;
+	fDefaultArmLength = 400.0f;
+	fCrouchArmLength = 550.0f;
+	fDefaultWalkSpeed = 500.0f;
+	fCrouchWalkSpeed = 350.0f;
+
+	CrouchTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CrouchTimeline"));
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void ARPG_PlaygroundCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (CrouchCurve)
+	{
+		FOnTimelineFloat ProgressFunction;
+		ProgressFunction.BindUFunction(this, FName("HandleCrouchProgress"));
+
+		CrouchTimeline->AddInterpFloat(CrouchCurve, ProgressFunction);
+		CrouchTimeline->SetLooping(false);
+	}
 }
 
 void ARPG_PlaygroundCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -58,6 +81,9 @@ void ARPG_PlaygroundCharacter::SetupPlayerInputComponent(UInputComponent* Player
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+		// Crouching
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ARPG_PlaygroundCharacter::Crouch);
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARPG_PlaygroundCharacter::Move);
@@ -88,6 +114,36 @@ void ARPG_PlaygroundCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void ARPG_PlaygroundCharacter::HandleCrouchProgress(float Value)
+{
+	float NewLength = FMath::Lerp(
+		fDefaultArmLength,
+		fCrouchArmLength,
+		Value
+	);
+
+	GetCameraBoom()->TargetArmLength = NewLength;
+}
+
+void ARPG_PlaygroundCharacter::Crouch(const FInputActionValue& Value)
+{
+	if (bCrouched) 
+	{
+		bCrouched = false;
+		//Normal Speed and Camera distance
+		GetCharacterMovement()->MaxWalkSpeed = fDefaultWalkSpeed;
+		CrouchTimeline->ReverseFromEnd();
+	}
+	else
+	{
+		bCrouched = true;
+		//Lower Speed and Camera Far Away
+		GetCharacterMovement()->MaxWalkSpeed = fCrouchWalkSpeed;
+		CrouchTimeline->PlayFromStart();
+
+	}
 }
 
 void ARPG_PlaygroundCharacter::DoMove(float Right, float Forward)

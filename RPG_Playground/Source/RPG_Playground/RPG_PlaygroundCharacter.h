@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "Components/TimelineComponent.h"
+
 #include "RPG_PlaygroundCharacter.generated.h"
 
 class USpringArmComponent;
@@ -37,6 +39,22 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* JumpAction;
 
+	/** Crouch Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* CrouchAction;
+
+	/** Bool Is Crouching */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCrouched;
+
+	/** Camera values */
+	float fDefaultArmLength;
+	float fCrouchArmLength;
+
+	/** Speed Values */
+	float fDefaultWalkSpeed;
+	float fCrouchWalkSpeed;
+
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MoveAction;
@@ -49,10 +67,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	/** TimeLine Component */
+	UPROPERTY()
+	UTimelineComponent* CrouchTimeline;
+
+	/** CRoauchCurve */
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	UCurveFloat* CrouchCurve;
+
+
 public:
 
 	/** Constructor */
 	ARPG_PlaygroundCharacter();	
+
+	virtual void BeginPlay() override;
 
 protected:
 
@@ -66,6 +95,14 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	/** Called for looking input */
+	void Crouch(const FInputActionValue& Value);
+
+
+	/** Called for Camera Handle */
+	UFUNCTION()
+	void HandleCrouchProgress(float Value);
 
 public:
 
