@@ -18,7 +18,8 @@ public class RPG_Playground : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"MotionWarping"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

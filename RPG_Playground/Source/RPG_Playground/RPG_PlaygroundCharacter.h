@@ -12,6 +12,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UMotionWarpingComponent;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -32,12 +33,20 @@ class ARPG_PlaygroundCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	/** Motion Warping */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UMotionWarpingComponent* MotionWarping;
 	
 protected:
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* JumpAction;
+
+	/** Vault Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* VaultAction;
 
 	/** Crouch Input Action */
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -74,6 +83,27 @@ protected:
 	/** CRoauchCurve */
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	UCurveFloat* CrouchCurve;
+
+	/** Bool Can Warp */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanWarp;
+
+	/** Animation montage*/
+	UPROPERTY(EditAnywhere, Category = "Vault")
+	UAnimMontage* VaultMontage;
+
+	/** Warp target position at the start of the vault */
+	UPROPERTY(EditAnywhere, Category = "Vault")
+	FVector VaultStartPos;
+
+	/** Warp target position at the middle of the vault */
+	UPROPERTY(EditAnywhere, Category = "Vault")
+	FVector VaultMiddlePos;
+
+	/** Warp target position at the landing point of the vault */
+	UPROPERTY(EditAnywhere, Category = "Vault")
+	FVector VaultLandPos;
+
 
 
 public:
@@ -121,6 +151,27 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	/** Performs obstacle and clearance checks before triggering motion warp */
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Vault();
+
+	/* Restores movement, collision and cleans up warp targets */
+	UFUNCTION()
+	void OnVaultMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	/** Sets movement mode, updates warp targets and plays the montage */
+	UFUNCTION(BlueprintCallable, Category = "Vault")
+	void VaultMotionWarp();
+
+	/** Performs forward horizontal sweeps to detect a vaultable obstacle */
+	bool CheckObstacle(FHitResult& OutHit);
+
+	/** Checks vertical clearance over the detected obstacle and determines landing position */
+	bool CheckClearance(const FHitResult& ObstacleHit, float& OutHeight);
+
+	/** Performs a forward downward trace to find a landing surface */
+	bool FindForwardLanding(FVector& OutLandingPoint);
 
 public:
 
