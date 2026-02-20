@@ -88,7 +88,7 @@ void ARPG_PlaygroundCharacter::SetupPlayerInputComponent(UInputComponent* Player
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ARPG_PlaygroundCharacter::DoJumpStart);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Crouching
@@ -190,6 +190,14 @@ void ARPG_PlaygroundCharacter::DoLook(float Yaw, float Pitch)
 
 void ARPG_PlaygroundCharacter::DoJumpStart()
 {
+	// If Jump while crouching, player stops crouching
+	if (bCrouched) 
+	{
+			bCrouched = false;
+			//Normal Speed and Camera distance
+			GetCharacterMovement()->MaxWalkSpeed = fDefaultWalkSpeed;
+			CrouchTimeline->ReverseFromEnd();
+	}
 	// signal the character to jump
 	Jump();
 }
